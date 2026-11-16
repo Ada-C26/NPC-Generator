@@ -2,11 +2,7 @@ from flask import Blueprint, request, abort, make_response
 from ..db import db
 from ..models.character import Character
 from ..models.greeting import Greeting
-from sqlalchemy import func, union, except_
-
-from google import genai
-
-client = genai.Client()
+from ..generation.greeting import generate_greetings
 
 bp = Blueprint("characters", __name__, url_prefix="/characters")
 
@@ -73,18 +69,6 @@ def add_greetings(char_id):
     db.session.commit()
 
     return {"message": f"Greetings successfully added to {character_obj.name}"}, 201
-
-
-def generate_greetings(character):
-    input_message = f"I am writing a fantasy RPG video game. I have an npc named {character.name} who is {character.age} years old. They are a {character.occupation} who has a {character.personality} personality. Please generate a Python style list of 10 stock phrases they might use when the main character talks to them. Please return just the list without a variable name and square brackets."
-    response = client.models.generate_content(
-        model="gemini-3.5-flash-lite", contents=input_message
-    )
-
-    lines = response.text.splitlines()
-
-    # Strip leading and trailing quotes and commas from each greeting
-    return [line.strip("\"',") for line in lines]
 
 
 def validate_model(cls, id):
